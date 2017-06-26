@@ -423,7 +423,7 @@ LOCAL_SRC_FILES := $(Foundation_SRC_FILES) $(Net_SRC_FILES) $(NetSSL_SRC_FILES) 
 LOCAL_MODULE := libpoco
 LOCAL_CFLAGS := -DPOCO_ANDROID -DPOCO_NO_FPENVIRONMENT -DPOCO_NO_WSTRING \
 	-DPOCO_NO_SHAREDMEMORY -DHAVE_EXPAT_CONFIG_H
-LOCAL_CPPFLAGS := -frtti -fexceptions $(IGNORE_ERRORS)
+LOCAL_CPPFLAGS := -frtti -fexceptions -std=c++11 $(IGNORE_ERRORS)
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/$(PocoFoundationDir)/include \
@@ -434,16 +434,23 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/$(PocoXMLDir)/include \
 	$(LOCAL_PATH)/$(PocoJSONDir)/include
 
-ifeq ($(SDK_VERSION_23), true)
+LOCAL_SHARED_LIBRARIES := libssl libcrypto
+
+ifeq ($(PLATFORM_SDK_VERSION), 23)
 LOCAL_CXX_STL := libc++
 LOCAL_CFLAGS += -DUSE_BORING_SSL
+else ifeq ($(PLATFORM_SDK_VERSION), 22)
+LOCAL_SHARED_LIBRARIES += libc++ libdl
+LOCAL_C_INCLUDES += \
+					external/libcxx/include \
+					external/openssl/include
 else
 LOCAL_SDK_VERSION := 14
 LOCAL_NDK_STL_VARIANT := gnustl_static
-LOCAL_C_INCLUDES += external/openssl/include
+LOCAL_CPPFLAGS += -D__STDC_FORMAT_MACROS
+LOCAL_C_INCLUDES += \
+					external/openssl/include
 endif
-
-LOCAL_SHARED_LIBRARIES := libssl libcrypto
 
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_C_INCLUDES)
 include $(BUILD_SHARED_LIBRARY)
